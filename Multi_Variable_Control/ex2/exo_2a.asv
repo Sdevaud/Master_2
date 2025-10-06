@@ -1,0 +1,89 @@
+%% Initial value
+
+k = 0.091;
+b = 0.0036;
+J1 = 1;
+J2 = 0.1;
+T = 0.01;
+
+A = [1 T 0 0;
+    -T*k/J2 1-T*b/J2 T*k/J2 T*b/J2;
+     0 0 1 T;
+     T*k/J1 T*b/J1 -T*k/J1 1-T*b/J1];
+
+B = [0; 0; 0; T/J1];
+C = [1 0 0 0];
+D = 0;
+satell=ss(A,B,C,D,T);
+
+%% (a)
+
+lambda = eig(A);
+modules_lambda = abs(lambda);
+
+tol = 1e-10;
+
+if all(modules_lambda < 1 - tol)
+    disp('The system is asymptotically stable (AS).');
+
+elseif any(abs(modules_lambda - 1) < tol)
+    lambda_unit = unique(lambda(abs(modules_lambda - 1) < tol));
+    stability = true;
+
+    for k = 1:length(lambda_unit)
+        lam = lambda_unit(k);
+
+        % Multiplicity
+        m_alg = sum(abs(lambda - lam) < tol);
+        m_geo = size(null(A - lam*eye(size(A))), 2);
+
+        fprintf('Eigenvalue λ = %.4f%+.4fi\n', real(lam), imag(lam));
+        fprintf('  Algebraic multiplicity: %d\n', m_alg);
+        fprintf('  Geometric multiplicity: %d\n', m_geo);
+
+        if m_alg ~= m_geo || m_alg > 1
+            fprintf("⚠️ The system is unstable (Jordan block detected)\n");
+            stability = false;
+        end
+    end
+
+    if stability
+        fprintf("The system is marginally stable (simply stable)\n");
+    end
+
+elseif any(modules_lambda > 1 + tol)
+    disp('The system is unstable.');
+end
+% the system is unstable, because mod(eigenvalue) = 1 and 
+% geom != alge
+
+%% (b)
+
+tu=0:T:200;
+u=0*tu;
+x0=[0 0 0.1 0];
+[y,t,x]=lsim(satell,u,tu,x0);
+figure(1)
+plot(t,y)
+grid
+title('Free movement - angular position of the second mass')
+
+%the satelite osciallte due to the pair of pôle with magnetude < 1
+% but it converge to a value different to zero
+
+%% (c)
+
+[y,t,x]=lsim(satell,tu);
+figure(2)
+plot(t,y)
+grid
+title("impulse response")
+
+%% (D)
+
+[y,t,x]=lsim(satell,u);
+figure(2)
+plot(t,y)
+grid
+title("impulse response")
+
