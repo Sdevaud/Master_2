@@ -1,0 +1,4 @@
+{
+    "python.defaultInterpreterPath": "/home/seby/miniconda3/envs/mondada/bin/python",
+    "jupyter.notebookFileRoot": "${workspaceFolder}"
+}
